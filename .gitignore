@@ -1,0 +1,10 @@
+# Python — служебный кэш от tools/_generate_previews.py
+__pycache__/
+*.py[cod]
+
+# Редакторы и операционные системы
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
