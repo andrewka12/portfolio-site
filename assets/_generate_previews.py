@@ -126,22 +126,50 @@ def bubble(d, box, text, mine, fnt):
     d.text((x0 + 18, y0 + 14), text, font=fnt, fill=(232, 237, 244))
 
 
+def badge(d, box, text, color, fnt):
+    x0, y0, x1, y1 = box
+    d.rounded_rectangle(box, radius=12, fill=(color[0] // 6, color[1] // 6, color[2] // 6),
+                        outline=color, width=1)
+    d.text(((x0 + x1) / 2, (y0 + y1) / 2), text, font=fnt, fill=color, anchor="mm")
+
+
 def make_ai_bot():
+    """Preview built from the REAL output of `python -m ai_support_bot chat`.
+
+    Text below is copied verbatim from the project's own demo run, so the card
+    shows what the bot actually answers — not an invented dialogue.
+    """
     img = vgrad((14, 19, 26), (10, 14, 19), (W, H))
     d = ImageDraw.Draw(img)
-    window_chrome(d, W, H, "AI Support Bot — автосервис «Гараж 24»")
+    window_chrome(d, W, H, "AI Support Bot — автосервис «Гараж 24», демо-режим")
     f = font(18)
-    fb = font(18, True)
-    bubble(d, (80, 120, 620, 200), "Здравствуйте! Сколько стоит замена масла\nна Toyota Camry и сколько это займёт?", False, f)
-    bubble(d, (300, 215, 1120, 340),
-           "Замена масла и масляного фильтра на Toyota Camry — 2 400 ₽\nвместе с работой. Занимает около 40 минут.\n\nМожно приехать сегодня: есть свободное время в 15:30 и 17:00.", True, f)
-    bubble(d, (80, 355, 700, 435), "А если масло своё? И есть ли гарантия?", False, f)
-    bubble(d, (300, 450, 1120, 545),
-           "Со своим маслом работа — 1 200 ₽. Гарантия на работу 6 месяцев,\nна ваши запчасти гарантия не распространяется.", True, f)
-    bubble(d, (80, 552, 700, 624), "Хочу пожаловаться на качество прошлого ремонта", False, f)
-    d.rounded_rectangle([300, 640, 1120, 698], radius=14, fill=(60, 46, 20), outline=(255, 176, 32), width=1)
-    d.text((322, 655), "Передаю оператору — он ответит в течение 10 минут. Тикет #142 создан.",
-           font=fb, fill=(255, 200, 90))
+    fm = font(15)
+    fb = font(17, True)
+
+    # обмен 1: вопрос, ответ на который есть в базе знаний
+    bubble(d, (80, 112, 620, 168),
+           "Сколько стоит замена масла в двигателе?", False, f)
+    bubble(d, (300, 180, 1120, 345),
+           "Замена моторного масла и масляного фильтра — 1 200 ₽ за работу.\n"
+           "Цена работы не зависит от количества масла в двигателе.\n"
+           "Утилизация отработанного масла входит в стоимость работы.\n"
+           "\n"
+           "Источник: avtoservice/02-uslugi-i-ceny.md → «Замена масла и фильтров»", True, f)
+    badge(d, (612, 355, 1120, 387),
+          "уверенность 0.95 · ответ по базе знаний", (38, 208, 160), fm)
+
+    # обмен 2: вопрос вне базы знаний — бот честно зовёт оператора
+    bubble(d, (80, 410, 700, 466),
+           "Какая погода в Москве завтра?", False, f)
+    bubble(d, (300, 478, 1120, 570),
+           "Передаю ваш вопрос оператору — он ответит в рабочее время.\n"
+           "Номер обращения: #1.", True, f)
+    badge(d, (600, 580, 1120, 612),
+          "уверенность 0.09 · нет ответа в базе → оператору", (255, 176, 32), fm)
+
+    d.text((80, 648),
+           "Реальный вывод python -m ai_support_bot chat · провайдер echo · работает офлайн, без ключей и интернета",
+           font=fm, fill=(120, 136, 156))
     img.save(os.path.join(OUT, "ai-support-bot.png"), "PNG")
 
 
