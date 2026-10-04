@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Автоматизация для селлеров WB и Ozon — Telegram-боты, отчёты, дашборды</title>
+<meta name="description" content="Разрабатываю Telegram-ботов и инструменты автоматизации для селлеров Wildberries и Ozon: выгрузка отчётов, мониторинг цен и отзывов, AI-боты поддержки, дашборды на Python.">
+<meta property="og:title" content="Автоматизация для селлеров Wildberries и Ozon">
+<meta property="og:description" content="Отчёты, мониторинг цен и отзывов, AI-боты поддержки. Python, Telegram, дашборды.">
+<meta property="og:type" content="website">
+
+<!-- ============================================================
+     ЧТО ЗАМЕНИТЬ ПЕРЕД ПУБЛИКАЦИЕЙ (поиск по слову ЗАМЕНИТЕ):
+       1. ИМЯ           — ваше имя или ник
+       2. TELEGRAM      — ссылка вида https://t.me/ваш_ник  (встречается 4 раза)
+       3. GITHUB        — ссылка на ваш профиль GitHub
+       4. EMAIL         — если хотите показывать почту
+       5. Картинки кейсов в assets/ — положите свои скриншоты
+     ============================================================ -->
+
+<style>
+  :root{
+    --bg:#0d1117;
+    --bg-soft:#141b24;
+    --card:#161d28;
+    --line:#243040;
+    --text:#e8edf4;
+    --muted:#93a1b5;
+    --accent:#4f8cff;
+    --accent-2:#26d0a0;
+    --warn:#ffb020;
+    --radius:14px;
+    --maxw:1080px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+    line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  img{max-width:100%;display:block}
+  a{color:inherit}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+  section{padding:72px 0;border-top:1px solid var(--line)}
+  h1,h2,h3{line-height:1.25;margin:0 0 16px}
+  h1{font-size:clamp(28px,5vw,46px);letter-spacing:-.02em}
+  h2{font-size:clamp(22px,3.4vw,32px);letter-spacing:-.01em}
+  h3{font-size:19px}
+  p{margin:0 0 14px}
+  .muted{color:var(--muted)}
+  .lead{font-size:clamp(16px,2.2vw,19px);color:var(--muted);max-width:62ch}
+
+  /* ---------- кнопки ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:11px;
+    font-weight:600;font-size:15px;text-decoration:none;border:1px solid transparent;
+    transition:transform .15s ease,background .15s ease,border-color .15s ease;cursor:pointer;
+  }
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:#3d7cf0;transform:translateY(-1px)}
+  .btn-ghost{border-color:var(--line);color:var(--text);background:transparent}
+  .btn-ghost:hover{border-color:var(--accent);transform:translateY(-1px)}
+
+  /* ---------- шапка ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(13,17,23,.86);border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+  .logo{font-weight:700;letter-spacing:-.01em;text-decoration:none;white-space:nowrap}
+  .logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:24px;font-size:14.5px}
+  .nav-links a{text-decoration:none;color:var(--muted)}
+  .nav-links a:hover{color:var(--text)}
+  @media(max-width:760px){.nav-links{display:none}}
+
+  /* ---------- герой ---------- */
+  .hero{border-top:none;padding:84px 0 64px}
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--accent-2);
+    border:1px solid rgba(38,208,160,.3);background:rgba(38,208,160,.08);
+    padding:6px 13px;border-radius:99px;margin-bottom:22px;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-2)}
+  .hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0 40px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;border-top:1px solid var(--line);padding-top:28px}
+  .stat b{display:block;font-size:clamp(20px,3vw,27px);letter-spacing:-.02em}
+  .stat span{font-size:13.5px;color:var(--muted)}
+  @media(max-width:620px){.stats{grid-template-columns:1fr;gap:20px}}
+
+  /* ---------- сетки ---------- */
+  .grid{display:grid;gap:18px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:900px){.g3{grid-template-columns:1fr}}
+  @media(max-width:700px){.g2{grid-template-columns:1fr}}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px;transition:border-color .15s ease,transform .15s ease;
+  }
+  .card:hover{border-color:#33445c;}
+  .card h3{margin-bottom:8px}
+  .card p{margin:0;color:var(--muted);font-size:14.5px}
+  .num{
+    width:34px;height:34px;border-radius:9px;background:rgba(79,140,255,.12);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;margin-bottom:14px;
+  }
+
+  /* ---------- кейсы ---------- */
+  .case{overflow:hidden;padding:0;display:flex;flex-direction:column}
+  .case-media{
+    aspect-ratio:16/10;position:relative;overflow:hidden;
+    background:
+      radial-gradient(circle at 18% 22%,rgba(79,140,255,.28),transparent 45%),
+      radial-gradient(circle at 82% 78%,rgba(38,208,160,.22),transparent 45%),
+      repeating-linear-gradient(45deg,#151d29 0 12px,#131a24 12px 24px);
+    border-bottom:1px solid var(--line);
+  }
+  .case-media img{width:100%;height:100%;object-fit:cover;position:relative;z-index:1}
+  .case-body{padding:22px 24px 26px;display:flex;flex-direction:column;flex:1}
+  .tags{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0 0}
+  .tag{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
+  .case ul{margin:12px 0 0;padding-left:18px;color:var(--muted);font-size:14.5px}
+  .case li{margin-bottom:6px}
+  .case a.repo{margin-top:auto;padding-top:18px;font-size:14px;color:var(--accent);text-decoration:none;font-weight:600}
+  .case a.repo:hover{text-decoration:underline}
+
+  /* ---------- калькулятор ---------- */
+  .calc{display:grid;grid-template-columns:1.35fr 1fr;gap:26px;align-items:start}
+  @media(max-width:860px){.calc{grid-template-columns:1fr}}
+  .opt{
+    display:flex;gap:13px;align-items:flex-start;padding:14px 16px;border:1px solid var(--line);
+    border-radius:11px;margin-bottom:10px;cursor:pointer;background:var(--bg-soft);
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .opt:hover{border-color:#33445c}
+  .opt input{margin:3px 0 0;accent-color:var(--accent);width:17px;height:17px;flex:none}
+  .opt.on{border-color:var(--accent);background:rgba(79,140,255,.07)}
+  .opt-name{font-weight:600;font-size:15px}
+  .opt-desc{font-size:13.5px;color:var(--muted)}
+  .total{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px;position:sticky;top:84px;
+  }
+  .total .price{font-size:clamp(26px,4vw,34px);font-weight:700;letter-spacing:-.02em;color:var(--accent-2)}
+  .total .term{color:var(--muted);font-size:14px}
+  .total hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+
+  /* ---------- процесс ---------- */
+  .steps{counter-reset:s;display:grid;gap:14px}
+  .step{display:flex;gap:16px;align-items:flex-start}
+  .step-n{
+    counter-increment:s;flex:none;width:30px;height:30px;border-radius:50%;
+    border:1px solid var(--accent);color:var(--accent);display:flex;align-items:center;
+    justify-content:center;font-size:14px;font-weight:700;
+  }
+  .step-n::before{content:counter(s)}
+
+  /* ---------- FAQ ---------- */
+  details{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px 20px;margin-bottom:10px}
+  details[open]{border-color:#33445c}
+  summary{cursor:pointer;font-weight:600;font-size:15.5px;list-style:none;display:flex;justify-content:space-between;gap:14px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";color:var(--accent);font-size:20px;line-height:1;flex:none}
+  details[open] summary::after{content:"–"}
+  details p{margin:12px 0 0;color:var(--muted);font-size:14.5px}
+
+  /* ---------- контакт ---------- */
+  .contact{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:40px;text-align:center}
+  .contact p{max-width:56ch;margin-left:auto;margin-right:auto}
+  .contact-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px}
+  footer{padding:34px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+  .foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--text)}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="logo" href="#top">автоматизация<span>.</span>WB</a>
+    <nav class="nav-links">
+      <a href="#services">Что делаю</a>
+      <a href="#cases">Кейсы</a>
+      <a href="#calc">Стоимость</a>
+      <a href="#process">Как работаем</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+    <!-- ЗАМЕНИТЕ: ссылку Telegram -->
+    <a class="btn btn-primary" href="https://t.me/ВАШ_НИК" target="_blank" rel="noopener">Написать в Telegram</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ================= ГЕРОЙ ================= -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="badge"><span class="dot"></span> Беру 2 проекта в этом месяце</div>
+      <h1>Telegram-боты и автоматизация<br>для селлеров Wildberries и Ozon</h1>
+      <p class="lead">
+        Убираю ручную рутину. Отчёт, который вы собираете в Excel три часа,
+        формируется за 20 секунд и приходит в Telegram. Падение рейтинга,
+        демпинг конкурента и уход товара в ноль вы узнаёте в тот же день, а не через неделю.
+      </p>
+      <div class="hero-cta">
+        <!-- ЗАМЕНИТЕ: ссылку Telegram -->
+        <a class="btn btn-primary" href="https://t.me/ВАШ_НИК" target="_blank" rel="noopener">Обсудить задачу</a>
+        <a class="btn btn-ghost" href="#cases">Посмотреть кейсы</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>3</b><span>рабочих инструмента с открытым кодом</span></div>
+        <div class="stat"><b>20 сек</b><span>вместо 3 часов на сборку отчёта</span></div>
+        <div class="stat"><b>2–5 дней</b><span>до первого рабочего результата</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= УСЛУГИ ================= -->
+  <section id="services">
+    <div class="wrap">
+      <h2>Что я автоматизирую</h2>
+      <p class="lead" style="margin-bottom:34px">Четыре задачи, которые забирают у селлера больше всего времени. Начинать можно с любой.</p>
+      <div class="grid g2">
+        <div class="card">
+          <div class="num">01</div>
+          <h3>Выгрузка и парсинг данных WB и Ozon</h3>
+          <p>Продажи, цены, остатки, позиции и конкуренты — в Excel или Google Sheets. Больше не нужно копировать цифры руками и сводить их в таблицу.</p>
+        </div>
+        <div class="card">
+          <div class="num">02</div>
+          <h3>Telegram-бот мониторинга</h3>
+          <p>Уведомления о новых заказах и отзывах, падении рейтинга, уходе товара в ноль и демпинге конкурентов. С утра в Telegram уже лежит сводка.</p>
+        </div>
+        <div class="card">
+          <div class="num">03</div>
+          <h3>AI-бот поддержки покупателей</h3>
+          <p>Отвечает на типовые вопросы по вашей базе знаний вашим тоном, а сложное передаёт оператору. Не выдумывает — если ответа нет, честно зовёт человека.</p>
+        </div>
+        <div class="card">
+          <div class="num">04</div>
+          <h3>Дашборд и мини-админка</h3>
+          <p>Динамика продаж, остатки, сравнение с конкурентами, история цен. Одна страница, на которой видно состояние магазина без выгрузок и формул.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= КЕЙСЫ ================= -->
+  <section id="cases">
+    <div class="wrap">
+      <h2>Кейсы</h2>
+      <p class="lead" style="margin-bottom:34px">
+        Три инструмента, которые можно запустить прямо сейчас. Код открыт, демо-данные внутри —
+        убедитесь сами, а не верьте на слово.
+      </p>
+      <div class="grid g3">
+
+        <article class="card case">
+          <div class="case-media">
+            <!-- ЗАМЕНИТЕ: свой скриншот -->
+            <img src="assets/mp-monitor.png" alt="Дашборд мониторинга Wildberries">
+          </div>
+          <div class="case-body">
+            <h3>MP Monitor</h3>
+            <p>Мониторинг своих товаров и конкурентов на WB: история цен, аналитика, Excel-отчёт и тревоги в Telegram.</p>
+            <ul>
+              <li>30 дней истории по 5 товарам и 25 конкурентам</li>
+              <li>отчёт на 4 листах формируется за секунды</li>
+              <li>дашборд рисует динамику цен без Excel</li>
+            </ul>
+            <div class="tags">
+              <span class="tag">Python</span><span class="tag">SQLite</span><span class="tag">openpyxl</span><span class="tag">Telegram API</span>
+            </div>
+            <!-- ЗАМЕНИТЕ: ссылку на репозиторий -->
+            <a class="repo" href="https://github.com/ВАШ_ЛОГИН/mp-monitor" target="_blank" rel="noopener">Смотреть код на GitHub →</a>
+          </div>
+        </article>
+
+        <article class="card case">
+          <div class="case-media">
+            <img src="assets/ai-support-bot.png" alt="Диалог AI-бота поддержки">
+          </div>
+          <div class="case-body">
+            <h3>AI Support Bot</h3>
+            <p>Бот поддержки, который отвечает покупателям по базе знаний бизнеса и передаёт сложные вопросы оператору.</p>
+            <ul>
+              <li>поиск ответа по документам, а не выдумывание</li>
+              <li>эскалация живому оператору и тикеты</li>
+              <li>аналитика: сколько вопросов решено без человека</li>
+            </ul>
+            <div class="tags">
+              <span class="tag">Python</span><span class="tag">RAG</span><span class="tag">SQLite</span><span class="tag">LLM API</span>
+            </div>
+            <!-- ЗАМЕНИТЕ: ссылку на репозиторий -->
+            <a class="repo" href="https://github.com/ВАШ_ЛОГИН/ai-support-bot" target="_blank" rel="noopener">Смотреть код на GitHub →</a>
+          </div>
+        </article>
+
+        <article class="card case">
+          <div class="case-media">
+            <img src="assets/landing.png" alt="Страница услуги">
+          </div>
+          <div class="case-body">
+            <h3>Страница услуги</h3>
+            <p>Эта страница. Сделана на чистых HTML, CSS и JavaScript — без конструкторов, сборки и сторонних библиотек.</p>
+            <ul>
+              <li>открывается как файл, работает без интернета</li>
+              <li>адаптивна под телефон</li>
+              <li>интерактивный расчёт стоимости на JS</li>
+            </ul>
+            <div class="tags">
+              <span class="tag">HTML</span><span class="tag">CSS</span><span class="tag">JavaScript</span>
+            </div>
+            <a class="repo" href="#calc">Попробовать калькулятор →</a>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= КАЛЬКУЛЯТОР ================= -->
+  <section id="calc">
+    <div class="wrap">
+      <h2>Сколько это стоит</h2>
+      <p class="lead" style="margin-bottom:34px">
+        Отметьте, что нужно, — увидите ориентир по цене и сроку. Это не оферта:
+        точную цену называю после того, как увижу ваш текущий отчёт или процесс.
+      </p>
+      <div class="calc">
+        <div>
+          <label class="opt on">
+            <input type="checkbox" checked data-price="6000" data-days="2" data-label="Выгрузка отчётов в Excel/Sheets">
+            <span>
+              <span class="opt-name">Выгрузка отчётов в Excel или Google Sheets</span>
+              <span class="opt-desc">Продажи, цены, остатки, конкуренты. Разово или по расписанию.</span>
+            </span>
+          </label>
+          <label class="opt">
+            <input type="checkbox" data-price="18000" data-days="5" data-label="Telegram-бот мониторинга">
+            <span>
+              <span class="opt-name">Telegram-бот мониторинга</span>
+              <span class="opt-desc">Заказы, отзывы, рейтинг, остатки, цены конкурентов — с уведомлениями.</span>
+            </span>
+          </label>
+          <label class="opt">
+            <input type="checkbox" data-price="40000" data-days="7" data-label="AI-бот поддержки по базе знаний">
+            <span>
+              <span class="opt-name">AI-бот поддержки покупателей</span>
+              <span class="opt-desc">Ответы по вашей базе знаний, передача сложного оператору, аналитика диалогов.</span>
+            </span>
+          </label>
+          <label class="opt">
+            <input type="checkbox" data-price="45000" data-days="12" data-label="Дашборд продаж и остатков">
+            <span>
+              <span class="opt-name">Дашборд продаж и остатков</span>
+              <span class="opt-desc">Веб-страница с графиками, историей цен и сравнением с конкурентами.</span>
+            </span>
+          </label>
+          <label class="opt">
+            <input type="checkbox" data-price="9000" data-days="4" data-label="Интеграция с 1С / CRM / складом">
+            <span>
+              <span class="opt-name">Интеграция с CRM, складом или таблицами</span>
+              <span class="opt-desc">Связываю маркетплейс с тем, что уже используется в компании.</span>
+            </span>
+          </label>
+          <label class="opt">
+            <input type="checkbox" data-price="6000" data-days="0" data-label="Поддержка и доработки (в месяц)">
+            <span>
+              <span class="opt-name">Поддержка и доработки — 6 000 ₽/мес</span>
+              <span class="opt-desc">Слежу за работоспособностью, вношу правки и мелкие доработки.</span>
+            </span>
+          </label>
+        </div>
+
+        <aside class="total">
+          <div class="term">Ориентировочная стоимость</div>
+          <div class="price" id="total">6 000 ₽</div>
+          <div class="term" id="term">Срок: 2 дня</div>
+          <hr>
+          <div class="term" id="summary">Выбрано: выгрузка отчётов</div>
+          <hr>
+          <p class="muted" style="font-size:13.5px;margin-bottom:18px">
+            Оплата по этапам: 30–50% предоплата, остаток после сдачи.
+            Исходный код и инструкция по запуску передаю вам.
+          </p>
+          <!-- ЗАМЕНИТЕ: ссылку Telegram -->
+          <a class="btn btn-primary" style="width:100%;justify-content:center"
+             href="https://t.me/ВАШ_НИК" target="_blank" rel="noopener">Обсудить проект</a>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ПРОЦЕСС ================= -->
+  <section id="process">
+    <div class="wrap">
+      <h2>Как проходит работа</h2>
+      <p class="lead" style="margin-bottom:34px">Без «созвонов ради созвонов» и без сюрпризов в счёте.</p>
+      <div class="steps">
+        <div class="step"><div class="step-n"></div><div>
+          <h3>Разбор задачи</h3>
+          <p class="muted">Вы показываете, как делаете это сейчас: файл, таблицу, скриншот процесса. Я задаю вопросы и говорю, что реально автоматизируется, а что нет.</p>
+        </div></div>
+        <div class="step"><div class="step-n"></div><div>
+          <h3>Оценка и разбивка на этапы</h3>
+          <p class="muted">Фиксирую в переписке: что входит в работу, что нет, цена и срок по каждому этапу. Второй этап начинается только после приёмки первого.</p>
+        </div></div>
+        <div class="step"><div class="step-n"></div><div>
+          <h3>Первый рабочий результат за 2–5 дней</h3>
+          <p class="muted">Вы получаете работающий инструмент, а не отчёт о проделанной работе. Две итерации правок в рамках задачи включены.</p>
+        </div></div>
+        <div class="step"><div class="step-n"></div><div>
+          <h3>Передача и запуск</h3>
+          <p class="muted">Исходный код, инструкция по запуску, помощь с размещением на сервере. Документы: договор, акт, чек самозанятого.</p>
+        </div></div>
+        <div class="step"><div class="step-n"></div><div>
+          <h3>Поддержка по желанию</h3>
+          <p class="muted">Если нужно — веду проект дальше: слежу за работоспособностью, дорабатываю под новые задачи.</p>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section id="faq">
+    <div class="wrap">
+      <h2>Частые вопросы</h2>
+      <div style="margin-top:28px">
+        <details open>
+          <summary>У вас есть опыт коммерческой разработки?</summary>
+          <p>Крупных заказов у меня пока не было — я специализируюсь именно на автоматизации для селлеров и собрал три рабочих инструмента в этой нише, они открыты на GitHub. Поэтому первую работу для вас делаю по нижней цене и с оплатой по этапам: вы ничем не рискуете, я получаю кейс и отзыв.</p>
+        </details>
+        <details>
+          <summary>Что нужно, чтобы вы назвали точную цену?</summary>
+          <p>Три вещи: откуда брать данные, что должно быть в результате, и как часто это должно обновляться. Пришлите пример отчёта или таблицы, которые вы делаете сейчас, — назову цену и срок в тот же день.</p>
+        </details>
+        <details>
+          <summary>Как я пойму, что вы не пропадёте с предоплатой?</summary>
+          <p>Первый этап можно начать без предоплаты: я показываю работающий прототип на ваших данных, вы смотрите и решаете. Дальше — оплата по этапам. Работаю как самозанятый, по каждому поступлению выдаю чек.</p>
+        </details>
+        <details>
+          <summary>А если маркетплейс поменяет интерфейс?</summary>
+          <p>Такое бывает, поэтому в проектах предусмотрены понятные сообщения об ошибках и запас по источникам данных. Поддержка — 6 000 ₽ в месяц, она покрывает такие изменения.</p>
+        </details>
+        <details>
+          <summary>Вы работаете только с Wildberries?</summary>
+          <p>Ozon тоже. А те же инструменты применимы к любому бизнесу, где есть повторяющаяся работа с таблицами, отчётами и ответами клиентам: доставка, клиники, автосервисы, опт.</p>
+        </details>
+        <details>
+          <summary>Что с исходным кодом?</summary>
+          <p>Он ваш. После полной оплаты права на результат переходят вам, вместе с кодом передаю инструкцию по запуску. Я оставляю за собой только право показать проект в портфолио — если вы против, это тоже решаемо.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= КОНТАКТ ================= -->
+  <section id="contact">
+    <div class="wrap">
+      <div class="contact">
+        <h2>Расскажите, что отнимает у вас время</h2>
+        <p class="muted">
+          Напишите в Telegram пару строк: что делаете руками и как часто.
+          Отвечу, реально ли это автоматизировать, за какой срок и сколько это будет стоить.
+          Даже если не сойдёмся — подскажу, как решить задачу своими силами.
+        </p>
+        <div class="contact-cta">
+          <!-- ЗАМЕНИТЕ: ссылку Telegram -->
+          <a class="btn btn-primary" href="https://t.me/ВАШ_НИК" target="_blank" rel="noopener">Написать в Telegram</a>
+          <!-- ЗАМЕНИТЕ: ссылку GitHub -->
+          <a class="btn btn-ghost" href="https://github.com/ВАШ_ЛОГИН" target="_blank" rel="noopener">Профиль на GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>© <span id="year"></span> <!-- ЗАМЕНИТЕ: ваше имя -->Ваше Имя — автоматизация для Wildberries и Ozon</div>
+    <div>Работаю как самозанятый · Предоставляю чек · Удалённо</div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.opt input[type=checkbox]'));
+  var totalEl = document.getElementById('total');
+  var termEl = document.getElementById('term');
+  var summaryEl = document.getElementById('summary');
+
+  function plural(n, one, few, many) {
+    var n10 = n % 10, n100 = n % 100;
+    if (n10 === 1 && n100 !== 11) return one;
+    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return few;
+    return many;
+  }
+
+  function money(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽';
+  }
+
+  function recalc() {
+    var sum = 0, days = 0, names = [];
+
+    boxes.forEach(function (box) {
+      var wrap = box.closest('.opt');
+      if (box.checked) {
+        wrap.classList.add('on');
+        sum += Number(box.dataset.price) || 0;
+        days = Math.max(days, Number(box.dataset.days) || 0);
+        names.push(box.dataset.label);
+      } else {
+        wrap.classList.remove('on');
+      }
+    });
+
+    totalEl.textContent = sum > 0 ? money(sum) : '0 ₽';
+
+    if (!names.length) {
+      termEl.textContent = 'Выберите хотя бы одну задачу';
+      summaryEl.textContent = 'Ничего не выбрано';
+    } else {
+      termEl.textContent = days > 0
+        ? 'Срок: ' + days + ' ' + plural(days, 'рабочий день', 'рабочих дня', 'рабочих дней')
+        : 'Срок: по договорённости';
+      summaryEl.textContent = 'Выбрано (' + names.length + '): ' + names.join('; ');
+    }
+  }
+
+  boxes.forEach(function (box) { box.addEventListener('change', recalc); });
+  recalc();
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+})();
+</script>
+
+</body>
+</html>
